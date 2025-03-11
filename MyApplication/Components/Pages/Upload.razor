@@ -1,0 +1,186 @@
+﻿@page "/upload"
+
+<PageTitle>Counter</PageTitle>
+@rendermode InteractiveServer
+
+<MudText Typo="Typo.h3" GutterBottom="true">Upload File</MudText>
+
+<MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
+    <ActivatorContent>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.CloudUpload">
+            Upload File
+        </MudButton>
+    </ActivatorContent>
+</MudFileUpload>
+
+@if (_files != null)
+{
+    <MudText Typo="@Typo.h6">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
+    <MudList T="string">
+    
+        @foreach (var file in _files)
+        {
+            <MudSimpleTable Style="overflow-x: auto;">
+            <thead>
+                <tr>
+        
+                    <th>Name</th>
+                    <th>File Size(bytes)</th>
+            
+                </tr>
+            </thead>
+            
+            <tbody>
+            <tr>
+                    <td>@file.Name</td>
+                    <td>@file.Size</td>
+              </tr>  
+        
+    </tbody>
+    </MudSimpleTable>
+
+
+    <MudSimpleTable Style="overflow-x: auto;">
+            <thead>
+                <tr>
+        
+                    <th>Reader ID</th>
+                    <th>Reader Name</th>
+                    <th>Event Count</th>
+            
+                </tr>
+            </thead>
+            
+            <tbody>
+            <tr>
+                   @foreach (var entry in readerEvents)
+        {
+            <tr>
+                <td>@entry.Key</td>
+                <td>@entry.Value.FirstOrDefault()?.ReaderDesc</td>
+                <td>@entry.Value.Count</td>
+            </tr>
+        }
+              </tr>  
+        
+    </tbody>
+    </MudSimpleTable>
+
+        }
+    </MudList>
+}
+
+
+@code
+{
+    IList<IBrowserFile> _files = new List<IBrowserFile>();
+
+    public string FileName { get; set; } = "";
+    public long FileSize { get; set; }
+    public string FileType { get; set; } = "";
+    public string ListSize { get; set; } = "";
+    public DateTimeOffset LastModified { get; set; }
+    public string ErrorMessage { get; set; } = "";
+
+    const int MAX_FILESIZE = 5000 * 1024; // 5 MB
+    
+    private Dictionary<string, List<ReaderEvent>> readerEvents = new();
+    private List<ReaderEvent> Entries = new();
+
+    private void UploadFiles(IBrowserFile file)
+    {
+        _files.Add(file);
+        FileUploaded(file);
+        //TODO upload the files to the server
+    }
+
+     public async Task FileUploaded(IBrowserFile e)
+{
+    var browserFile = e;
+
+    if (browserFile != null)
+    {
+        FileSize = browserFile.Size;
+        FileType = browserFile.ContentType;
+        FileName = browserFile.Name;
+        LastModified = browserFile.LastModified;
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await browserFile.OpenReadStream(MAX_FILESIZE).CopyToAsync(memoryStream);
+
+            // Reset stream position before reading
+            memoryStream.Position = 0;
+            using var reader = new StreamReader(memoryStream);
+
+            string line;
+            bool firstLine = true;
+            Entries.Clear();
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                if (!firstLine)
+                {
+                    var columns = line.Split(',');
+                    Entries.Add(new ReaderEvent(columns[0], columns[1], columns[2], columns[3], int.Parse(columns[4]), int.Parse(columns[5])));
+                }
+                else
+                {
+                    firstLine = false;
+                }
+            }
+
+            ListSize = Entries.Count.ToString();
+            readerEvents = OrganizeEventsByReader(Entries);
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+    }
+}
+
+private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<ReaderEvent> events)
+    {
+        var dictionary = new Dictionary<string, List<ReaderEvent>>();
+
+        foreach (var evt in events)
+        {
+            string readerId = $"{evt.DevID}-{evt.Machine}";
+
+            if (!dictionary.ContainsKey(readerId))
+            {
+                dictionary[readerId] = new List<ReaderEvent> { evt };
+            }
+            else
+            {
+                dictionary[readerId].Add(evt);
+            }
+        }
+        return dictionary;
+    }
+
+
+    public class ReaderEvent
+    {
+        public string Time { get; }
+        public string Location { get; }
+        public string ReaderDesc { get; }
+        public string IDHash { get; }
+        public int DevID { get; }
+        public int Machine { get; }
+
+        public ReaderEvent(string time, string location, string readerDesc, string idHash, int devID, int machine)
+        {
+            Time = time;
+            Location = location;
+            ReaderDesc = readerDesc;
+            IDHash = idHash;
+            DevID = devID;
+            Machine = machine;
+        }
+    }
+}
