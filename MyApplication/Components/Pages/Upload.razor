@@ -28,6 +28,40 @@
               </tr>  
     </tbody>
     </MudSimpleTable> 
+
+
+
+    <MudSimpleTable Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            <th>Day of the Week</th>
+            <th>Event Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entry in eventsByDayOfWeek)
+        {
+            <tr>
+                <td>@entry.Key</td>
+                <td>@entry.Value.Count</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+
+
+    <div>
+    <MudChart ChartType="ChartType.Line" ChartSeries="@Series" @bind-SelectedIndex="Index" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" ChartOptions="@Options"/>
+    <MudGrid>
+        @* <MudItem xs="6">
+            <MudText Typo="Typo.body1" Class="py-3">Selected: @(Index < 0 ? "None" : Series[Index].Name)</MudText>
+        </MudItem>
+        <MudItem xs="6">
+            <MudSlider @bind-Value="Options.LineStrokeWidth" Min="1" Max="10" Color="Color.Info">Line Width: @Options.LineStrokeWidth.ToString()</MudSlider>
+        </MudItem> *@
+    </MudGrid>
+</div>
 }
 
 @* <MudSimpleTable Style="overflow-x: auto;">
@@ -50,23 +84,8 @@
     </tbody>
 </MudSimpleTable> *@
 
-<MudSimpleTable Style="overflow-x: auto;">
-    <thead>
-        <tr>
-            <th>Day of the Week</th>
-            <th>Event Count</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var entry in eventsByDayOfWeek)
-        {
-            <tr>
-                <td>@entry.Key</td>
-                <td>@entry.Value.Count</td>
-            </tr>
-        }
-    </tbody>
-</MudSimpleTable>
+
+
 
 @code {
     public IBrowserFile file { get; set; }
@@ -82,6 +101,17 @@
     private Dictionary<string, List<ReaderEvent>> readerEvents = new();
     private Dictionary<string, List<ReaderEvent>> eventsByDayOfWeek = new();
     private List<ReaderEvent> Entries = new();
+
+
+
+private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    public ChartOptions Options = new ChartOptions();
+    
+    public List<ChartSeries> Series = new List<ChartSeries>()
+    {
+    };
+    public string[] XAxisLabels = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
 
     public async Task FileUploaded(IBrowserFile e)
     {
@@ -162,14 +192,18 @@
             {"Saturday", new List<ReaderEvent>()}
         };
 
+        
+
         foreach (var evt in events)
         {
             if (DateTime.TryParse(evt.Time, out DateTime eventDate))
             {
                 string dayOfWeek = eventDate.ToString("dddd");
                 dictionary[dayOfWeek].Add(evt);
+                
             }
         }
+        Series.Add(new ChartSeries() { Name = "# of Entries", Data = new double[] { dictionary["Sunday"].Count, dictionary["Monday"].Count, dictionary["Tuesday"].Count, dictionary["Wednesday"].Count, dictionary["Thursday"].Count, dictionary["Friday"].Count, dictionary["Saturday"].Count} });
         return dictionary;
     }
 
