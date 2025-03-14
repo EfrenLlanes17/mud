@@ -1,4 +1,4 @@
-﻿@page "/upload"
+﻿@* @page "/upload"
 
 <PageTitle>Counter</PageTitle>
 @rendermode InteractiveServer
@@ -22,7 +22,7 @@
     
         @foreach (var file in _files)
         {
-            <MudSimpleTable Style="overflow-x: auto;">
+             <MudSimpleTable Style="overflow-x: auto;">
             <thead>
                 <tr>
         
@@ -39,7 +39,7 @@
               </tr>  
         
     </tbody>
-    </MudSimpleTable>
+    </MudSimpleTable> 
 
 
     <MudSimpleTable Style="overflow-x: auto;">
@@ -54,16 +54,17 @@
             </thead>
             
             <tbody>
-            <tr>
+            
                    @foreach (var entry in readerEvents)
         {
             <tr>
-                <td>@entry.Key</td>
+                 <td>@entry.Key</td>
                 <td>@entry.Value.FirstOrDefault()?.ReaderDesc</td>
-                <td>@entry.Value.Count</td>
+                <td>@entry.Value.Count</td> 
+                <td>1</td>
             </tr>
         }
-              </tr>  
+              
         
     </tbody>
     </MudSimpleTable>
@@ -84,15 +85,15 @@
     public DateTimeOffset LastModified { get; set; }
     public string ErrorMessage { get; set; } = "";
 
-    const int MAX_FILESIZE = 5000 * 1024; // 5 MB
+    const int MAX_FILESIZE = 50000 * 1024; 
     
     private Dictionary<string, List<ReaderEvent>> readerEvents = new();
     private List<ReaderEvent> Entries = new();
 
     private void UploadFiles(IBrowserFile file)
-    {
+    {   FileUploaded(file);
         _files.Add(file);
-        FileUploaded(file);
+        
         //TODO upload the files to the server
     }
 
@@ -183,4 +184,166 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
             Machine = machine;
         }
     }
+} *@
+
+@page "/upload"
+@rendermode InteractiveServer
+
+<PageTitle>Upload</PageTitle>
+
+<h1>Blazor Server File Upload</h1>
+
+@* <div style="margin-bottom: 20px; display: flex;">
+    <div>Select your file:</div>
+    <InputFile OnChange="FileUploaded" />
+</div> *@
+
+
+<MudFileUpload T="IBrowserFile" FilesChanged="FileUploaded">
+    <ActivatorContent>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.CloudUpload">
+            Upload File
+        </MudButton>
+    </ActivatorContent>
+</MudFileUpload>
+
+
+<h2>Selected file</h2>
+<div>
+    <div>File name: @FileName</div>
+    <div>File size: @FileSize.ToString("n0") bytes</div>
+    <div>File type: @FileType</div>
+    <div>List Size: @ListSize</div>
+    <div>Last modified: @LastModified</div>
+</div>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div>Error: @ErrorMessage</div>
 }
+
+<h2>Reader Events Summary</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Reader ID</th>
+            <th>Reader Name</th>
+            <th>Event Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entry in readerEvents)
+        {
+            <tr>
+                <td>@entry.Key</td>
+                <td>@entry.Value.FirstOrDefault()?.ReaderDesc</td>
+                <td>@entry.Value.Count</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public string FileName { get; set; } = "";
+    public long FileSize { get; set; }
+    public string FileType { get; set; } = "";
+    public string ListSize { get; set; } = "";
+    public DateTimeOffset LastModified { get; set; }
+    public string ErrorMessage { get; set; } = "";
+
+    const int MAX_FILESIZE = 5000 * 1024; // 5 MB
+
+    private Dictionary<string, List<ReaderEvent>> readerEvents = new();
+    private List<ReaderEvent> Entries = new();
+
+    public async Task FileUploaded(IBrowserFile e)
+{
+    var browserFile = e;
+
+    if (browserFile != null)
+    {
+        FileSize = browserFile.Size;
+        FileType = browserFile.ContentType;
+        FileName = browserFile.Name;
+        LastModified = browserFile.LastModified;
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await browserFile.OpenReadStream(MAX_FILESIZE).CopyToAsync(memoryStream);
+
+            // Reset stream position before reading
+            memoryStream.Position = 0;
+            using var reader = new StreamReader(memoryStream);
+
+            string line;
+            bool firstLine = true;
+            Entries.Clear();
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                if (!firstLine)
+                {
+                    var columns = line.Split(',');
+                    Entries.Add(new ReaderEvent(columns[0], columns[1], columns[2], columns[3], int.Parse(columns[4]), int.Parse(columns[5])));
+                }
+                else
+                {
+                    firstLine = false;
+                }
+            }
+
+            ListSize = Entries.Count.ToString();
+            readerEvents = OrganizeEventsByReader(Entries);
+        }
+        catch (Exception exception)
+        {
+            ErrorMessage = exception.Message;
+        }
+    }
+}
+
+
+    private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<ReaderEvent> events)
+    {
+        var dictionary = new Dictionary<string, List<ReaderEvent>>();
+
+        foreach (var evt in events)
+        {
+            string readerId = $"{evt.DevID}-{evt.Machine}";
+
+            if (!dictionary.ContainsKey(readerId))
+            {
+                dictionary[readerId] = new List<ReaderEvent> { evt };
+            }
+            else
+            {
+                dictionary[readerId].Add(evt);
+            }
+        }
+        return dictionary;
+    }
+
+    public class ReaderEvent
+    {
+        public string Time { get; }
+        public string Location { get; }
+        public string ReaderDesc { get; }
+        public string IDHash { get; }
+        public int DevID { get; }
+        public int Machine { get; }
+
+        public ReaderEvent(string time, string location, string readerDesc, string idHash, int devID, int machine)
+        {
+            Time = time;
+            Location = location;
+            ReaderDesc = readerDesc;
+            IDHash = idHash;
+            DevID = devID;
+            Machine = machine;
+        }
+    }
+}
+

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "fh4Of5TMJPYKNnkuRlpbft8ygfzzx2uV+Y0vfUga6S8=",
+  "Hash": "95p/rKyIalJeCxgvayLnsiuZJJ2XkTBYmCbkvvzmy0c=",
   "Source": "MyApplication",
   "BasePath": "_content/MyApplication",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "MyApplication\\wwwroot",
       "Source": "MyApplication",
-      "ContentRoot": "c:\\Users\\el1101034\\Desktop\\mud\\MyApplication\\wwwroot\\",
+      "ContentRoot": "c:\\Users\\efren\\OneDrive\\Desktop\\Code Projects\\blaze1\\mud\\MyApplication\\wwwroot\\",
       "BasePath": "_content/MyApplication",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "C:\\Users\\el1101034\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.css",
+      "Identity": "C:\\Users\\efren\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.css",
       "SourceId": "MudBlazor",
       "SourceType": "Package",
-      "ContentRoot": "C:\\Users\\el1101034\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\",
+      "ContentRoot": "C:\\Users\\efren\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\",
       "BasePath": "_content/MudBlazor",
       "RelativePath": "MudBlazor.min.css",
       "AssetKind": "All",
@@ -33,13 +33,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "C:\\Users\\el1101034\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.css"
+      "OriginalItemSpec": "C:\\Users\\efren\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.css"
     },
     {
-      "Identity": "C:\\Users\\el1101034\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.js",
+      "Identity": "C:\\Users\\efren\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.js",
       "SourceId": "MudBlazor",
       "SourceType": "Package",
-      "ContentRoot": "C:\\Users\\el1101034\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\",
+      "ContentRoot": "C:\\Users\\efren\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\",
       "BasePath": "_content/MudBlazor",
       "RelativePath": "MudBlazor.min.js",
       "AssetKind": "All",
@@ -52,13 +52,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "C:\\Users\\el1101034\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.js"
+      "OriginalItemSpec": "C:\\Users\\efren\\.nuget\\packages\\mudblazor\\8.3.0\\staticwebassets\\MudBlazor.min.js"
     },
     {
-      "Identity": "c:\\Users\\el1101034\\Desktop\\mud\\MyApplication\\wwwroot\\favicon.ico",
+      "Identity": "c:\\Users\\efren\\OneDrive\\Desktop\\Code Projects\\blaze1\\mud\\MyApplication\\wwwroot\\favicon.ico",
       "SourceId": "MyApplication",
       "SourceType": "Discovered",
-      "ContentRoot": "c:\\Users\\el1101034\\Desktop\\mud\\MyApplication\\wwwroot\\",
+      "ContentRoot": "c:\\Users\\efren\\OneDrive\\Desktop\\Code Projects\\blaze1\\mud\\MyApplication\\wwwroot\\",
       "BasePath": "_content/MyApplication",
       "RelativePath": "favicon.ico",
       "AssetKind": "All",
