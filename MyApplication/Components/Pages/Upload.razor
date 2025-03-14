@@ -1,197 +1,7 @@
-﻿@* @page "/upload"
-
-<PageTitle>Counter</PageTitle>
-@rendermode InteractiveServer
-
-<MudText Typo="Typo.h3" GutterBottom="true">Upload File</MudText>
-
-<MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
-    <ActivatorContent>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.CloudUpload">
-            Upload File
-        </MudButton>
-    </ActivatorContent>
-</MudFileUpload>
-
-@if (_files != null)
-{
-    <MudText Typo="@Typo.h6">@_files.Count() File@(_files.Count() == 1 ? "" : "s"):</MudText>
-    <MudList T="string">
-    
-        @foreach (var file in _files)
-        {
-             <MudSimpleTable Style="overflow-x: auto;">
-            <thead>
-                <tr>
-        
-                    <th>Name</th>
-                    <th>File Size(bytes)</th>
-            
-                </tr>
-            </thead>
-            
-            <tbody>
-            <tr>
-                    <td>@file.Name</td>
-                    <td>@file.Size</td>
-              </tr>  
-        
-    </tbody>
-    </MudSimpleTable> 
-
-
-    <MudSimpleTable Style="overflow-x: auto;">
-            <thead>
-                <tr>
-        
-                    <th>Reader ID</th>
-                    <th>Reader Name</th>
-                    <th>Event Count</th>
-            
-                </tr>
-            </thead>
-            
-            <tbody>
-            
-                   @foreach (var entry in readerEvents)
-        {
-            <tr>
-                 <td>@entry.Key</td>
-                <td>@entry.Value.FirstOrDefault()?.ReaderDesc</td>
-                <td>@entry.Value.Count</td> 
-                <td>1</td>
-            </tr>
-        }
-              
-        
-    </tbody>
-    </MudSimpleTable>
-
-        }
-    </MudList>
-}
-
-
-@code
-{
-    IList<IBrowserFile> _files = new List<IBrowserFile>();
-
-    public string FileName { get; set; } = "";
-    public long FileSize { get; set; }
-    public string FileType { get; set; } = "";
-    public string ListSize { get; set; } = "";
-    public DateTimeOffset LastModified { get; set; }
-    public string ErrorMessage { get; set; } = "";
-
-    const int MAX_FILESIZE = 50000 * 1024; 
-    
-    private Dictionary<string, List<ReaderEvent>> readerEvents = new();
-    private List<ReaderEvent> Entries = new();
-
-    private void UploadFiles(IBrowserFile file)
-    {   FileUploaded(file);
-        _files.Add(file);
-        
-        //TODO upload the files to the server
-    }
-
-     public async Task FileUploaded(IBrowserFile e)
-{
-    var browserFile = e;
-
-    if (browserFile != null)
-    {
-        FileSize = browserFile.Size;
-        FileType = browserFile.ContentType;
-        FileName = browserFile.Name;
-        LastModified = browserFile.LastModified;
-
-        try
-        {
-            using var memoryStream = new MemoryStream();
-            await browserFile.OpenReadStream(MAX_FILESIZE).CopyToAsync(memoryStream);
-
-            // Reset stream position before reading
-            memoryStream.Position = 0;
-            using var reader = new StreamReader(memoryStream);
-
-            string line;
-            bool firstLine = true;
-            Entries.Clear();
-
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-                if (!firstLine)
-                {
-                    var columns = line.Split(',');
-                    Entries.Add(new ReaderEvent(columns[0], columns[1], columns[2], columns[3], int.Parse(columns[4]), int.Parse(columns[5])));
-                }
-                else
-                {
-                    firstLine = false;
-                }
-            }
-
-            ListSize = Entries.Count.ToString();
-            readerEvents = OrganizeEventsByReader(Entries);
-        }
-        catch (Exception exception)
-        {
-            ErrorMessage = exception.Message;
-        }
-    }
-}
-
-private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<ReaderEvent> events)
-    {
-        var dictionary = new Dictionary<string, List<ReaderEvent>>();
-
-        foreach (var evt in events)
-        {
-            string readerId = $"{evt.DevID}-{evt.Machine}";
-
-            if (!dictionary.ContainsKey(readerId))
-            {
-                dictionary[readerId] = new List<ReaderEvent> { evt };
-            }
-            else
-            {
-                dictionary[readerId].Add(evt);
-            }
-        }
-        return dictionary;
-    }
-
-
-    public class ReaderEvent
-    {
-        public string Time { get; }
-        public string Location { get; }
-        public string ReaderDesc { get; }
-        public string IDHash { get; }
-        public int DevID { get; }
-        public int Machine { get; }
-
-        public ReaderEvent(string time, string location, string readerDesc, string idHash, int devID, int machine)
-        {
-            Time = time;
-            Location = location;
-            ReaderDesc = readerDesc;
-            IDHash = idHash;
-            DevID = devID;
-            Machine = machine;
-        }
-    }
-} *@
-
-@page "/upload"
+﻿@page "/upload"
 @rendermode InteractiveServer
 
 <PageTitle>Upload</PageTitle>
-
-
 
 <MudFileUpload T="IBrowserFile" FilesChanged="FileUploaded">
     <ActivatorContent>
@@ -207,54 +17,56 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
 <MudSimpleTable Style="overflow-x: auto;">
             <thead>
                 <tr>
-        
                     <th>Name</th>
                     <th>File Size(bytes)</th>
-            
                 </tr>
             </thead>
-            
             <tbody>
             <tr>
                     <td>@file.Name</td>
                     <td>@file.Size</td>
               </tr>  
-        
     </tbody>
     </MudSimpleTable> 
-
 }
 
-
-<MudSimpleTable Style="overflow-x: auto;">
+@* <MudSimpleTable Style="overflow-x: auto;">
             <thead>
                 <tr>
-        
                     <th>Reader ID</th>
                     <th>Reader Name</th>
                     <th>Event Count</th>
-            
                 </tr>
             </thead>
-            
             <tbody>
-            
                    @foreach (var entry in readerEvents)
         {
             <tr>
                  <td>@entry.Key</td>
                 <td>@entry.Value.FirstOrDefault()?.ReaderDesc</td>
                 <td>@entry.Value.Count</td> 
-                <td>1</td>
             </tr>
         }
-              
-        
     </tbody>
-    </MudSimpleTable>
+</MudSimpleTable> *@
 
-
-
+<MudSimpleTable Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            <th>Day of the Week</th>
+            <th>Event Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entry in eventsByDayOfWeek)
+        {
+            <tr>
+                <td>@entry.Key</td>
+                <td>@entry.Value.Count</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
 
 @code {
     public IBrowserFile file { get; set; }
@@ -268,66 +80,63 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
     const int MAX_FILESIZE = 5000 * 1024; // 5 MB
 
     private Dictionary<string, List<ReaderEvent>> readerEvents = new();
+    private Dictionary<string, List<ReaderEvent>> eventsByDayOfWeek = new();
     private List<ReaderEvent> Entries = new();
 
     public async Task FileUploaded(IBrowserFile e)
-{
-    var browserFile = e;
-
-    file = browserFile;
-
-    if (browserFile != null)
     {
-        FileSize = browserFile.Size;
-        FileType = browserFile.ContentType;
-        FileName = browserFile.Name;
-        LastModified = browserFile.LastModified;
+        var browserFile = e;
+        file = browserFile;
 
-        try
+        if (browserFile != null)
         {
-            using var memoryStream = new MemoryStream();
-            await browserFile.OpenReadStream(MAX_FILESIZE).CopyToAsync(memoryStream);
+            FileSize = browserFile.Size;
+            FileType = browserFile.ContentType;
+            FileName = browserFile.Name;
+            LastModified = browserFile.LastModified;
 
-            // Reset stream position before reading
-            memoryStream.Position = 0;
-            using var reader = new StreamReader(memoryStream);
-
-            string line;
-            bool firstLine = true;
-            Entries.Clear();
-
-            while ((line = await reader.ReadLineAsync()) != null)
+            try
             {
-                if (!firstLine)
-                {
-                    var columns = line.Split(',');
-                    Entries.Add(new ReaderEvent(columns[0], columns[1], columns[2], columns[3], int.Parse(columns[4]), int.Parse(columns[5])));
-                }
-                else
-                {
-                    firstLine = false;
-                }
-            }
+                using var memoryStream = new MemoryStream();
+                await browserFile.OpenReadStream(MAX_FILESIZE).CopyToAsync(memoryStream);
 
-            ListSize = Entries.Count.ToString();
-            readerEvents = OrganizeEventsByReader(Entries);
-        }
-        catch (Exception exception)
-        {
-            ErrorMessage = exception.Message;
+                memoryStream.Position = 0;
+                using var reader = new StreamReader(memoryStream);
+
+                string line;
+                bool firstLine = true;
+                Entries.Clear();
+
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    if (!firstLine)
+                    {
+                        var columns = line.Split(',');
+                        Entries.Add(new ReaderEvent(columns[0], columns[1], columns[2], columns[3], int.Parse(columns[4]), int.Parse(columns[5])));
+                    }
+                    else
+                    {
+                        firstLine = false;
+                    }
+                }
+
+                ListSize = Entries.Count.ToString();
+                readerEvents = OrganizeEventsByReader(Entries);
+                eventsByDayOfWeek = OrganizeEventsByDayOfWeek(Entries);
+            }
+            catch (Exception exception)
+            {
+                ErrorMessage = exception.Message;
+            }
         }
     }
-}
-
 
     private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<ReaderEvent> events)
     {
         var dictionary = new Dictionary<string, List<ReaderEvent>>();
-
         foreach (var evt in events)
         {
             string readerId = $"{evt.DevID}-{evt.Machine}";
-
             if (!dictionary.ContainsKey(readerId))
             {
                 dictionary[readerId] = new List<ReaderEvent> { evt };
@@ -335,6 +144,30 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
             else
             {
                 dictionary[readerId].Add(evt);
+            }
+        }
+        return dictionary;
+    }
+
+    private Dictionary<string, List<ReaderEvent>> OrganizeEventsByDayOfWeek(List<ReaderEvent> events)
+    {
+        var dictionary = new Dictionary<string, List<ReaderEvent>>
+        {
+            {"Sunday", new List<ReaderEvent>()},
+            {"Monday", new List<ReaderEvent>()},
+            {"Tuesday", new List<ReaderEvent>()},
+            {"Wednesday", new List<ReaderEvent>()},
+            {"Thursday", new List<ReaderEvent>()},
+            {"Friday", new List<ReaderEvent>()},
+            {"Saturday", new List<ReaderEvent>()}
+        };
+
+        foreach (var evt in events)
+        {
+            if (DateTime.TryParse(evt.Time, out DateTime eventDate))
+            {
+                string dayOfWeek = eventDate.ToString("dddd");
+                dictionary[dayOfWeek].Add(evt);
             }
         }
         return dictionary;
@@ -360,4 +193,3 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
         }
     }
 }
-
