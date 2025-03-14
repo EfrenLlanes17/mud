@@ -191,12 +191,6 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
 
 <PageTitle>Upload</PageTitle>
 
-<h1>Blazor Server File Upload</h1>
-
-@* <div style="margin-bottom: 20px; display: flex;">
-    <div>Select your file:</div>
-    <InputFile OnChange="FileUploaded" />
-</div> *@
 
 
 <MudFileUpload T="IBrowserFile" FilesChanged="FileUploaded">
@@ -209,43 +203,61 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
     </ActivatorContent>
 </MudFileUpload>
 
+@if(file != null){
+<MudSimpleTable Style="overflow-x: auto;">
+            <thead>
+                <tr>
+        
+                    <th>Name</th>
+                    <th>File Size(bytes)</th>
+            
+                </tr>
+            </thead>
+            
+            <tbody>
+            <tr>
+                    <td>@file.Name</td>
+                    <td>@file.Size</td>
+              </tr>  
+        
+    </tbody>
+    </MudSimpleTable> 
 
-<h2>Selected file</h2>
-<div>
-    <div>File name: @FileName</div>
-    <div>File size: @FileSize.ToString("n0") bytes</div>
-    <div>File type: @FileType</div>
-    <div>List Size: @ListSize</div>
-    <div>Last modified: @LastModified</div>
-</div>
-
-@if (!string.IsNullOrEmpty(ErrorMessage))
-{
-    <div>Error: @ErrorMessage</div>
 }
 
-<h2>Reader Events Summary</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Reader ID</th>
-            <th>Reader Name</th>
-            <th>Event Count</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var entry in readerEvents)
+
+<MudSimpleTable Style="overflow-x: auto;">
+            <thead>
+                <tr>
+        
+                    <th>Reader ID</th>
+                    <th>Reader Name</th>
+                    <th>Event Count</th>
+            
+                </tr>
+            </thead>
+            
+            <tbody>
+            
+                   @foreach (var entry in readerEvents)
         {
             <tr>
-                <td>@entry.Key</td>
+                 <td>@entry.Key</td>
                 <td>@entry.Value.FirstOrDefault()?.ReaderDesc</td>
-                <td>@entry.Value.Count</td>
+                <td>@entry.Value.Count</td> 
+                <td>1</td>
             </tr>
         }
+              
+        
     </tbody>
-</table>
+    </MudSimpleTable>
+
+
+
 
 @code {
+    public IBrowserFile file { get; set; }
     public string FileName { get; set; } = "";
     public long FileSize { get; set; }
     public string FileType { get; set; } = "";
@@ -261,6 +273,8 @@ private Dictionary<string, List<ReaderEvent>> OrganizeEventsByReader(List<Reader
     public async Task FileUploaded(IBrowserFile e)
 {
     var browserFile = e;
+
+    file = browserFile;
 
     if (browserFile != null)
     {
