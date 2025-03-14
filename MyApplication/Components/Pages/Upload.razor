@@ -13,7 +13,7 @@
     </ActivatorContent>
 </MudFileUpload>
 
-@if(file != null){
+@if(file != null || Series.Count != 0){
 <MudSimpleTable Style="overflow-x: auto;">
             <thead>
                 <tr>
@@ -88,7 +88,7 @@
 
 
 @code {
-    public IBrowserFile file { get; set; }
+    public static IBrowserFile file { get; set; }
     public string FileName { get; set; } = "";
     public long FileSize { get; set; }
     public string FileType { get; set; } = "";
@@ -99,7 +99,7 @@
     const int MAX_FILESIZE = 5000 * 1024; // 5 MB
 
     private Dictionary<string, List<ReaderEvent>> readerEvents = new();
-    private Dictionary<string, List<ReaderEvent>> eventsByDayOfWeek = new();
+    private static Dictionary<string, List<ReaderEvent>> eventsByDayOfWeek = new();
     private List<ReaderEvent> Entries = new();
 
 
@@ -107,7 +107,7 @@
 private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
     public ChartOptions Options = new ChartOptions();
     
-    public List<ChartSeries> Series = new List<ChartSeries>()
+    public static List<ChartSeries> Series = new List<ChartSeries>()
     {
     };
     public string[] XAxisLabels = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
